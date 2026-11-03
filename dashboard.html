@@ -1,0 +1,118 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Attendance Dashboard</title>
+<link rel="icon" href="icons/icon48.png">
+<style>
+  :root { --bg:#f8fafc; --card:#fff; --text:#0f172a; --muted:#64748b; --line:#e2e8f0; --accent:#2563eb; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0f172a; --card:#1e293b; --text:#e2e8f0; --muted:#94a3b8; --line:#334155; --accent:#60a5fa; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:20px; background:var(--bg); color:var(--text); font:14px system-ui,sans-serif; }
+  h1 { font-size:20px; margin:0 0 4px; }
+  .meta { color:var(--muted); font-size:12px; margin-bottom:16px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px; margin-bottom:14px; }
+  .card h2 { font-size:13px; margin:0 0 10px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); }
+  .row { display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; }
+  label { display:flex; flex-direction:column; gap:4px; font-size:12px; color:var(--muted); }
+  label.inline { flex-direction:row; align-items:center; gap:6px; color:var(--text); font-size:13px; }
+  input[type=text], input[type=number], select, textarea {
+    padding:7px 9px; border:1px solid var(--line); border-radius:6px; background:var(--bg); color:var(--text); font:inherit; }
+  button { padding:7px 14px; border:0; border-radius:6px; background:var(--accent); color:#fff; cursor:pointer; font:inherit; }
+  button.secondary { background:transparent; color:var(--text); border:1px solid var(--line); }
+  .tablewrap { overflow:auto; max-height:60vh; border:1px solid var(--line); border-radius:8px; }
+  table { border-collapse:collapse; width:100%; }
+  th, td { padding:8px 10px; text-align:left; border-bottom:1px solid var(--line); white-space:nowrap; }
+  th { position:sticky; top:0; background:var(--card); cursor:pointer; user-select:none; }
+  th:hover { color:var(--accent); }
+  tbody tr:hover { background:rgba(37,99,235,.08); }
+  .count { color:var(--muted); font-size:12px; margin:8px 0; }
+  textarea { width:100%; min-height:80px; font-family:ui-monospace,monospace; }
+  #empty { padding:40px; text-align:center; color:var(--muted); }
+  .topbar { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; }
+  .brand { display:flex; align-items:center; gap:10px; font-weight:600; }
+  .brand img { width:28px; height:28px; border-radius:6px; }
+  .dev { display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--text); }
+  .dev small { display:block; color:var(--muted); font-size:11px; line-height:1.2; }
+  .dev b { font-size:13px; }
+  .avatar { width:44px; height:44px; border-radius:50%; object-fit:cover; border:2px solid var(--accent); background:var(--card); }
+  .avatar-fallback { width:44px; height:44px; border-radius:50%; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:20px; }
+  [hidden] { display:none !important; }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand"><img src="icons/icon48.png" alt=""> Pedago Attendance</div>
+    <a class="dev" href="https://github.com/Md-Nur-A-Alam" target="_blank" rel="noopener noreferrer" title="Developer profile">
+      <span><small>Developed by</small><b>Mr. Nur</b></span>
+      <img id="devImg" class="avatar" alt="Developer profile photo" referrerpolicy="no-referrer">
+      <span id="devFallback" class="avatar-fallback" hidden>N</span>
+    </a>
+  </div>
+  <div id="empty" hidden>No scraped data yet. Open the attendance report page, click the extension icon, then "Scrape this page".</div>
+
+  <div id="app" hidden>
+    <h1>Attendance Dashboard</h1>
+    <div class="meta" id="meta"></div>
+
+    <div class="card">
+      <h2>Column mapping (auto-detected, change if wrong)</h2>
+      <div class="row">
+        <label>Name <select id="mapName"></select></label>
+        <label>Phone <select id="mapPhone"></select></label>
+        <label>Attendance % <select id="mapPercent"></select></label>
+        <label>Status (absent/present) <select id="mapStatus"></select></label>
+        <label class="inline"><input type="checkbox" id="compact"> Show only Name / Phone / %</label>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Filters</h2>
+      <div class="row">
+        <label>Search name <input type="text" id="search" placeholder="type to filter"></label>
+        <label class="inline"><input type="checkbox" id="absentOnly"> Absent only</label>
+        <label>Absent keyword(s) <input type="text" id="absentKw" value="absent" size="12"></label>
+        <label>Attendance %
+          <select id="pctOp">
+            <option value="">(no filter)</option>
+            <option value="lt">Below (&lt;)</option>
+            <option value="lte">Below or equal (≤)</option>
+            <option value="gt">Above (&gt;)</option>
+            <option value="gte">Above or equal (≥)</option>
+            <option value="eq">Equal (=)</option>
+          </select>
+        </label>
+        <label>Value <input type="number" id="pctVal" min="0" max="100" step="any" style="width:90px" placeholder="e.g. 75"></label>
+        <button class="secondary" id="reset">Reset filters</button>
+        <button class="secondary" id="csv">Export CSV</button>
+      </div>
+    </div>
+
+    <div class="count" id="count"></div>
+    <div class="tablewrap"><table><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
+
+    <div class="card" style="margin-top:14px">
+      <h2>Phone numbers of the rows shown above</h2>
+      <div class="row" style="margin-bottom:10px">
+        <label>Format
+          <select id="phoneFmt">
+            <option value="asis">As found</option>
+            <option value="local">01XXXXXXXXX</option>
+            <option value="intl">+8801XXXXXXXXX</option>
+          </select>
+        </label>
+        <label>Separator
+          <select id="phoneSep"><option value=",">,</option><option value=", ">, (with space)</option></select>
+        </label>
+        <label class="inline"><input type="checkbox" id="dedupe" checked> Remove duplicates</label>
+        <button id="copy">Copy all</button>
+        <span id="phoneCount" class="count"></span>
+      </div>
+      <textarea id="phones" readonly></textarea>
+    </div>
+  </div>
+  <script src="dashboard.js"></script>
+</body>
+</html>

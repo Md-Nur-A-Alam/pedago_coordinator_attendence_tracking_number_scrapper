@@ -1,0 +1,41 @@
+{
+  "manifest_version": 3,
+  "name": "Pedago Attendance Dashboard",
+  "version": "1.0.0",
+  "description": "Scrapes the Zoom attendance report, then lets you sort, filter by percentage and copy absentees' phone numbers.",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://student.pedagoacademy.com/*"
+  ],
+  "action": {
+    "default_title": "Pedago Attendance Dashboard",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://student.pedagoacademy.com/local/zoomattendance/report.php*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
