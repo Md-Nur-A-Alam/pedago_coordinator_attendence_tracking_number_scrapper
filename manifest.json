@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Pedago Attendance Dashboard",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Scrapes the Zoom attendance report, then lets you sort, filter by percentage and copy absentees' phone numbers.",
   "permissions": [
     "storage",
